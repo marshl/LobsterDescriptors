@@ -12,7 +12,6 @@
       <Pattern>*.xsd</Pattern>
     </SearchRule>
   </SearchRules>
-  <PushAutomatically>true</PushAutomatically>
   <DefaultDataType>CLOB</DefaultDataType>
   <InsertStatement>
 DECLARE
