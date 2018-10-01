@@ -2,7 +2,7 @@
 <DirectoryDescriptor xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Xview Definitions</Name>
   <DirectoryName>XviewDefinitions</DirectoryName>
-  <PushOnFileChange>true</PushOnFileChange>
+  <PushOnFileChange>false</PushOnFileChange>
   <SearchRules>
     <SearchRule xsi:type="IncludeRule">
       <Pattern>*.xml</Pattern>
