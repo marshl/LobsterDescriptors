@@ -14,35 +14,17 @@ DECLARE
   l_is_binary_file CHAR;
   
   l_component_name VARCHAR2(4000);
-  l_component_type VARCHAR2(4000);
 BEGIN
 
   IF l_filename = 'fox_import' THEN
   
-    l_component_type := 'module'; 
     l_component_name := 'Fox/fox_import';
     
   ELSE
     
-    l_component_type := 
-      CASE l_file_extension
-        WHEN '.xml' THEN 'module'
-        WHEN '.html' THEN 'text/html'
-        WHEN '.htm' THEN 'text/html'
-        WHEN '.css' THEN 'text/css'
-        WHEN '.png' THEN 'image/png'
-        WHEN '.gif' THEN 'image/gif'
-        WHEN '.jpg' THEN 'image/jpg'
-        WHEN '.jpeg' THEN 'image/jpg'
-        WHEN '.js' THEN 'text/javascript'
-        WHEN '.ico' THEN 'image/x-icon' 
-        WHEN '.mustache' THEN 'text/mustache'     
-        WHEN '.swf' THEN 'application/x-shockwave-flash'
-      END;
-    
     l_component_name := 
       CASE 
-        WHEN l_component_type LIKE 'image%' THEN 'img/'
+        WHEN :p_mime_type LIKE 'image%' THEN 'img/'
         WHEN l_file_extension = '.css' THEN 'css/'
         WHEN l_file_extension = '.js' THEN 'js/'
       END || l_filename; 
@@ -50,7 +32,7 @@ BEGIN
   END IF;
   
   l_is_binary_file := CASE
-   WHEN l_component_type LIKE 'image%' THEN 'Y' 
+   WHEN :p_mime_type LIKE 'image%' THEN 'Y' 
    ELSE 'N' END;
   
   INSERT INTO envmgr.fox_components_fox5 (
@@ -60,7 +42,7 @@ BEGIN
   , bindata
   ) VALUES (
     l_component_name
-  , l_component_type
+  , :p_mime_type
   , CASE WHEN l_is_binary_file = 'N' THEN l_file_content_clob END
   , CASE WHEN l_is_binary_file = 'Y' THEN l_file_content_blob END
   );
@@ -77,35 +59,17 @@ DECLARE
   l_is_binary_file CHAR;
   
   l_component_name VARCHAR2(4000);
-  l_component_type VARCHAR2(4000);
 BEGIN
 
   IF l_filename = 'fox_import' THEN
   
-    l_component_type := 'module'; 
     l_component_name := 'Fox/fox_import';
     
   ELSE
     
-    l_component_type := 
-      CASE l_file_extension
-        WHEN '.xml' THEN 'module'
-        WHEN '.html' THEN 'text/html'
-        WHEN '.htm' THEN 'text/html'
-        WHEN '.css' THEN 'text/css'
-        WHEN '.png' THEN 'image/png'
-        WHEN '.gif' THEN 'image/gif'
-        WHEN '.jpg' THEN 'image/jpg'
-        WHEN '.jpeg' THEN 'image/jpg'
-        WHEN '.js' THEN 'text/javascript'
-        WHEN '.ico' THEN 'image/x-icon' 
-        WHEN '.mustache' THEN 'text/mustache'     
-        WHEN '.swf' THEN 'application/x-shockwave-flash'
-      END;
-    
     l_component_name :=
       CASE 
-        WHEN l_component_type LIKE 'image%' THEN 'img/'
+        WHEN :p_mime_type LIKE 'image%' THEN 'img/'
         WHEN l_file_extension = '.css' THEN 'css/'
         WHEN l_file_extension = '.js' THEN 'js/'
       END || l_filename; 
@@ -113,7 +77,7 @@ BEGIN
   END IF;
   
   l_is_binary_file := CASE
-   WHEN l_component_type LIKE 'image%' THEN 'Y' 
+   WHEN :p_mime_type LIKE 'image%' THEN 'Y' 
    ELSE 'N' END;
   
   UPDATE envmgr.fox_components_fox5
@@ -121,7 +85,7 @@ BEGIN
     data = CASE WHEN l_is_binary_file = 'N' THEN l_file_content_clob END
   , bindata = CASE WHEN l_is_binary_file = 'Y' THEN l_file_content_blob END
   WHERE name = l_component_name
-  AND type = l_component_type;
+  AND type = :p_mime_type;
 
 END;
   </UpdateStatement>
@@ -131,35 +95,17 @@ DECLARE
   l_file_extension VARCHAR2(4000) := :p_file_extension;
   
   l_component_name VARCHAR2(4000);
-  l_component_type VARCHAR2(4000);
 BEGIN
 
   IF l_filename = 'fox_import' THEN
   
-    l_component_type := 'module'; 
     l_component_name := 'Fox/fox_import';
     
   ELSE
     
-    l_component_type := 
-      CASE l_file_extension
-        WHEN '.xml' THEN 'module'
-        WHEN '.html' THEN 'text/html'
-        WHEN '.htm' THEN 'text/html'
-        WHEN '.css' THEN 'text/css'
-        WHEN '.png' THEN 'image/png'
-        WHEN '.gif' THEN 'image/gif'
-        WHEN '.jpg' THEN 'image/jpg'
-        WHEN '.jpeg' THEN 'image/jpg'
-        WHEN '.js' THEN 'text/javascript'
-        WHEN '.ico' THEN 'image/x-icon' 
-        WHEN '.mustache' THEN 'text/mustache'     
-        WHEN '.swf' THEN 'application/x-shockwave-flash'
-      END;
-    
     l_component_name :=
       CASE 
-        WHEN l_component_type LIKE 'image%' THEN 'img/'
+        WHEN :p_mime_type LIKE 'image%' THEN 'img/'
         WHEN l_file_extension = '.css' THEN 'css/'
         WHEN l_file_extension = '.js' THEN 'js/'
       END || l_filename; 
@@ -168,193 +114,127 @@ BEGIN
   
   DELETE FROM envmgr.fox_components_fox5
   WHERE name = l_component_name
-  AND type = l_component_type;
+  AND type = :p_mime_type;
 
 END;
   </DeleteStatement>
   <DatabaseFileExistsStatement>
 WITH q1 AS (
   SELECT
-    :p_filename_without_extension filename
-  , :p_file_extension file_extension
-  FROM dual
-), q2 AS (
-  SELECT
-    CASE q1.filename
+    CASE :p_filename_without_extension
       WHEN 'fox_import' THEN 'Fox/fox_import'
-      ELSE q1.filename
+      ELSE :p_filename_without_extension
     END component_name
-  , CASE q1.file_extension
-      WHEN '.xml' THEN 'module'
-      WHEN '.html' THEN 'text/html'
-      WHEN '.htm' THEN 'text/html'
-      WHEN '.css' THEN 'text/css'
-      WHEN '.png' THEN 'image/png'
-      WHEN '.gif' THEN 'image/gif'
-      WHEN '.jpg' THEN 'image/jpg'
-      WHEN '.jpeg' THEN 'image/jpg'
-      WHEN '.js' THEN 'text/javascript'
-      WHEN '.ico' THEN 'image/x-icon' 
-      WHEN '.mustache' THEN 'text/mustache'     
-      WHEN '.swf' THEN 'application/x-shockwave-flash'
-    END component_type
-  , q1.file_extension
-  FROM q1
+  FROM dual
 )
-, q3 AS (
+, q2 AS (
   SELECT
     CASE 
-      WHEN q2.component_type LIKE 'image%' THEN 'img/'
-      WHEN q2.file_extension = '.css' THEN 'css/'
-      WHEN q2.file_extension = '.js' THEN 'js/'
-    END || q2.component_name component_name 
-  , q2.component_type
-  FROM q2
+      WHEN :p_mime_type LIKE 'image%' THEN 'img/'
+      WHEN :p_file_extension = '.css' THEN 'css/'
+      WHEN :p_file_extension = '.js' THEN 'js/'
+    END || q1.component_name component_name 
+  FROM q1
 )
 SELECT COUNT(*) result
-FROM q3
+FROM q2
 JOIN envmgr.fox_components_fox5 fcf
-ON name = q3.component_name
-AND type = q3.component_type
+ON name = q2.component_name
+AND type = :p_mime_type
   </DatabaseFileExistsStatement>
   <FetchStatement>
 WITH q1 AS (
   SELECT
-    :p_filename_without_extension filename
-  , :p_file_extension file_extension
-  FROM dual
-), q2 AS (
-  SELECT
-    CASE q1.filename
+    CASE :p_filename_without_extension
       WHEN 'fox_import' THEN 'Fox/fox_import'
-      ELSE q1.filename
+      ELSE :p_filename_without_extension
     END component_name
-  , CASE q1.file_extension
-      WHEN '.xml' THEN 'module'
-      WHEN '.html' THEN 'text/html'
-      WHEN '.htm' THEN 'text/html'
-      WHEN '.css' THEN 'text/css'
-      WHEN '.png' THEN 'image/png'
-      WHEN '.gif' THEN 'image/gif'
-      WHEN '.jpg' THEN 'image/jpg'
-      WHEN '.jpeg' THEN 'image/jpg'
-      WHEN '.js' THEN 'text/javascript'
-      WHEN '.ico' THEN 'image/x-icon' 
-      WHEN '.mustache' THEN 'text/mustache'     
-      WHEN '.swf' THEN 'application/x-shockwave-flash'
-    END component_type
-  , q1.file_extension
   FROM q1
 )
-, q3 AS (
+, q2 AS (
   SELECT
     CASE 
-      WHEN q2.component_type LIKE 'image%' THEN 'img/'
-      WHEN q2.file_extension = '.css' THEN 'css/'
-      WHEN q2.file_extension = '.js' THEN 'js/'
-    END || q2.component_name component_name 
-  , q2.component_type
-  FROM q2
+      WHEN :p_mime_type LIKE 'image%' THEN 'img/'
+      WHEN :p_file_extension= '.css' THEN 'css/'
+      WHEN :p_file_extension = '.js' THEN 'js/'
+    END || q1.component_name component_name 
+  FROM q1
 )
 SELECT fcf.data
-FROM q3
+FROM q2
 JOIN envmgr.fox_components_fox5 fcf
-ON name = q3.component_name
-AND type = q3.component_type
-
+ON name = q2.component_name
+AND type = :p_mime_type
   </FetchStatement>
   <FetchBinaryStatement>
 WITH q1 AS (
   SELECT
-    :p_filename_without_extension filename
-  , :p_file_extension file_extension
-  FROM dual
-), q2 AS (
-  SELECT
-    CASE q1.filename
+    CASE :p_filename_without_extension
       WHEN 'fox_import' THEN 'Fox/fox_import'
-      ELSE q1.filename
+      ELSE :p_filename_without_extension
     END component_name
-  , CASE q1.file_extension
-      WHEN '.xml' THEN 'module'
-      WHEN '.html' THEN 'text/html'
-      WHEN '.htm' THEN 'text/html'
-      WHEN '.css' THEN 'text/css'
-      WHEN '.png' THEN 'image/png'
-      WHEN '.gif' THEN 'image/gif'
-      WHEN '.jpg' THEN 'image/jpg'
-      WHEN '.jpeg' THEN 'image/jpg'
-      WHEN '.js' THEN 'text/javascript'
-      WHEN '.ico' THEN 'image/x-icon' 
-      WHEN '.mustache' THEN 'text/mustache'     
-      WHEN '.swf' THEN 'application/x-shockwave-flash'
-    END component_type
-  , q1.file_extension
-  FROM q1
+  FROM dual
 )
-, q3 AS (
+, q2 AS (
   SELECT
     CASE 
-      WHEN q2.component_type LIKE 'image%' THEN 'img/'
-      WHEN q2.file_extension = '.css' THEN 'css/'
-      WHEN q2.file_extension = '.js' THEN 'js/'
-    END || q2.component_name component_name 
-  , q2.component_type
-  FROM q2
+      WHEN :p_mime_type LIKE 'image%' THEN 'img/'
+      WHEN :p_file_extension = '.css' THEN 'css/'
+      WHEN :p_file_extension = '.js' THEN 'js/'
+    END || q1.component_name component_name 
+  FROM q1
 )
 SELECT fcf.bindata
-FROM q3
+FROM q2
 JOIN envmgr.fox_components_fox5 fcf
-ON name = q3.component_name
-AND type = q3.component_type
+ON name = q2.component_name
+AND type = :p_mime_type
   </FetchBinaryStatement>
   <FileDataTypeStatement>
 WITH q1 AS (
   SELECT
-    :p_filename_without_extension filename
-  , :p_file_extension file_extension
-  FROM dual
-), q2 AS (
-  SELECT
-    CASE q1.filename
+    CASE :p_filename_without_extension
       WHEN 'fox_import' THEN 'Fox/fox_import'
-      ELSE q1.filename
+      ELSE :p_filename_without_extension
     END component_name
-  , CASE q1.file_extension
-      WHEN '.xml' THEN 'module'
-      WHEN '.html' THEN 'text/html'
-      WHEN '.htm' THEN 'text/html'
-      WHEN '.css' THEN 'text/css'
-      WHEN '.png' THEN 'image/png'
-      WHEN '.gif' THEN 'image/gif'
-      WHEN '.jpg' THEN 'image/jpg'
-      WHEN '.jpeg' THEN 'image/jpg'
-      WHEN '.js' THEN 'text/javascript'
-      WHEN '.ico' THEN 'image/x-icon' 
-      WHEN '.mustache' THEN 'text/mustache'     
-      WHEN '.swf' THEN 'application/x-shockwave-flash'
-    END component_type
-  , q1.file_extension
-  FROM q1
+  FROM dual
 )
-, q3 AS (
+, q2 AS (
   SELECT
     CASE 
-      WHEN q2.component_type LIKE 'image%' THEN 'img/'
-      WHEN q2.file_extension = '.css' THEN 'css/'
-      WHEN q2.file_extension = '.js' THEN 'js/'
-    END || q2.component_name component_name 
-  , q2.component_type
-  FROM q2
+      WHEN :p_mime_type LIKE 'image%' THEN 'img/'
+      WHEN :p_file_extension = '.css' THEN 'css/'
+      WHEN :p_file_extension = '.js' THEN 'js/'
+    END || q1.component_name component_name 
+  FROM q1
 )
 SELECT
-CASE WHEN q3.component_type LIKE 'image%'
+CASE WHEN :p_mime_type LIKE 'image%'
   THEN 'BLOB'
   ELSE 'CLOB'
 END datatype 
-FROM q3
+FROM q2
 JOIN envmgr.fox_components_fox5 fcf
-ON name = q3.component_name
-AND type = q3.component_type
+ON name = q2.component_name
+AND type = :p_mime_type
   </FileDataTypeStatement>
+  <FileMimeTypeStatement>
+SELECT
+CASE LOWER(:p_file_extension)
+  WHEN '.xml' THEN 'module'
+  WHEN '.html' THEN 'text/html'
+  WHEN '.htm' THEN 'text/html'
+  WHEN '.scss' THEN 'text/css'
+  WHEN '.css' THEN 'text/css'
+  WHEN '.png' THEN 'image/png'
+  WHEN '.gif' THEN 'image/gif'
+  WHEN '.jpg' THEN 'image/jpg'
+  WHEN '.jpeg' THEN 'image/jpg'
+  WHEN '.js' THEN 'text/javascript'
+  WHEN '.ico' THEN 'image/x-icon' 
+  WHEN '.mustache' THEN 'text/mustache'     
+  WHEN '.swf' THEN 'application/x-shockwave-flash'
+END
+FROM dual
+  </FileMimeTypeStatement>
 </DirectoryDescriptor>
